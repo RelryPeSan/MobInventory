@@ -2,16 +2,24 @@ package me.reratos.mobinventory.util;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 public class StorageMob {
 
+    private final Material materialSeparator = Material.GRAY_STAINED_GLASS_PANE;
+    private final Material materialInvNotUse = Material.RED_STAINED_GLASS_PANE;
+
+    private final LivingEntity entity;
     private final Inventory storage;
 
     public StorageMob(LivingEntity entity) {
+        this.entity = entity;
         this.storage = Bukkit.createInventory(null, 54, entity.getName() + "'s Inventory");
 
         initStorage();
@@ -19,8 +27,16 @@ public class StorageMob {
     }
 
     private void initStorage() {
-        ItemStack separator = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemStack invNotUse = new ItemStack(Material.BROWN_STAINED_GLASS_PANE);
+        ItemStack separator = new ItemStack(materialSeparator);
+        ItemStack invNotUse = new ItemStack(materialInvNotUse);
+
+        ItemMeta itemMetaSeparator = Bukkit.getItemFactory().getItemMeta(materialSeparator);
+        ItemMeta itemMetaInvNotUse = Bukkit.getItemFactory().getItemMeta(materialInvNotUse);
+        itemMetaSeparator.setDisplayName(" ");
+        itemMetaInvNotUse.setDisplayName(" ");
+
+        separator.setItemMeta(itemMetaSeparator);
+        invNotUse.setItemMeta(itemMetaInvNotUse);
 
         for(int i = 1; i < 54; i ++) {
             this.storage.setItem(i, invNotUse);
@@ -54,8 +70,38 @@ public class StorageMob {
         }
     }
 
+    public void setInventoryMob(int slot, ItemStack itemStack) {
+        if(entity instanceof InventoryHolder) {
+            Inventory inv = ((InventoryHolder) entity).getInventory();
+            ItemStack itemMob = inv.getItem(slot);
+
+            if(itemMob != null && itemMob.getType() == itemStack.getType()) {
+                if(itemMob.getMaxStackSize() != itemMob.getAmount()) {
+                    itemMob.setAmount(itemMob.getAmount() + itemStack.getAmount());
+                }
+            } else {
+                inv.setItem(slot, itemStack);
+            }
+        }
+    }
+
     public Inventory getStorage() {
         return this.storage;
     }
 
+    public LivingEntity getEntity() {
+        return entity;
+    }
+
+    public boolean hasStorage() {
+        return entity instanceof InventoryHolder;
+    }
+
+    public int getMaxSizeStorage() {
+        if(hasStorage()) {
+            return ((InventoryHolder) entity).getInventory().getSize();
+        } else {
+            return -1;
+        }
+    }
 }

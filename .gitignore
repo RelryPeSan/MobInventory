@@ -1,3 +1,4 @@
 /.idea/
 /target/
 /copy-jar-to-server.bat
+/dependency-reduced-pom.xml

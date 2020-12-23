@@ -6,7 +6,7 @@
 
     <groupId>me.reratos</groupId>
     <artifactId>MobInventory</artifactId>
-    <version>0.1.0-alpha</version>
+    <version>0.2.0-alpha</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -19,6 +19,12 @@
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+
+        <!-- This adds the bStats repository to the build -->
+        <repository>
+            <id>CodeMC</id>
+            <url>https://repo.codemc.org/repository/maven-public</url>
         </repository>
     </repositories>
 
@@ -46,5 +52,40 @@
             <version>0.18.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- bStats -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>1.8</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+                <!-- Do not include the <configuration>...</configuration> part if you are using Sponge! -->
+                <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>me.reratos.mobinventory</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -15,10 +15,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -121,17 +118,7 @@ public class PlayerListener implements Listener {
                     InventoryHolder inv = (InventoryHolder) livingEntity;
 
                     Inventory inventory = inv.getInventory();
-
-//                    int sizeInventory = inventory.getSize();
                     ItemStack[] itemStacks = inventory.getStorageContents();
-
-//                    player.sendMessage("\nmax size inventory: " + sizeInventory);
-
-//                    for (ItemStack item : itemStacks) {
-//                        if (item != null) {
-//                            player.sendMessage(item.getAmount() + "x " + item.getType().name());
-//                        }
-//                    }
 
                     storageMob.setInventoryMob(itemStacks);
                 }
@@ -189,7 +176,7 @@ public class PlayerListener implements Listener {
             }
 
         } catch (RuntimeException e) {
-            player.sendMessage("Ocorreu um erro: " + e.getMessage());
+            player.sendMessage("An error has occurred: " + e.getMessage());
             event.setCancelled(true);
         }
     }
@@ -197,23 +184,23 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onInventoryDragEvent(InventoryDragEvent event) {
         Player player = (Player) event.getWhoClicked();
-        Inventory inv = event.getInventory();
 
         try {
+            Inventory inv = event.getView().getInventory((Integer) event.getNewItems().keySet().toArray()[0]);
+
             if(storageMob.getStorage() == inv) {
                 Map<Integer, ItemStack> mapItemStack = event.getNewItems();
 
-                sendNotImplemented(player, "Arrastar itens no inventario do mob.");
-                event.setCancelled(true);
-
-//                if(mapItemStack.size() > 1) {
-//                } else {
-//                    setItemStorageMob((Integer) mapItemStack.keySet().toArray()[0],
-//                            (ItemStack) mapItemStack.values().toArray()[0]);
-//                }
+                if(mapItemStack.size() > 1) {
+                    sendNotImplemented(player, "Drag items in the mob inventory.");
+                    event.setCancelled(true);
+                } else {
+                    setItemStorageMob((Integer) mapItemStack.keySet().toArray()[0],
+                            (ItemStack) mapItemStack.values().toArray()[0]);
+                }
             }
         } catch (RuntimeException e) {
-            player.sendMessage("Ocorreu um erro ao arrastar item no inventário: " + e.getMessage());
+            player.sendMessage("There was an error dragging item into inventory: " + e.getMessage());
             event.setCancelled(true);
         }
     }
@@ -225,15 +212,15 @@ public class PlayerListener implements Listener {
             int maxSizeStorage = storageMob.getMaxSizeStorage();
 
             if(num >= maxSizeStorage) {
-                throw new ArrayIndexOutOfBoundsException("numero de inventario estourado.\nTamanho Maximo: " +
-                        maxSizeStorage + "\nTentando acessar index: " + num);
+                throw new ArrayIndexOutOfBoundsException("Inventory number outside the index.\nMaximum size: " +
+                        maxSizeStorage + "\nTrying to access index: " + num);
             }
             storageMob.setInventoryMob(num, item);
         }
     }
 
     private void sendNotImplemented(CommandSender sender, String text) {
-        sender.sendMessage(ChatColor.YELLOW + "Esta funcionalidade ainda não foi desenvolvida: " +
-                ChatColor.WHITE + text + ChatColor.YELLOW + "\nAguarde atualizações futuras. :)");
+        sender.sendMessage(ChatColor.YELLOW + "This feature has not yet been developed: " +
+                ChatColor.WHITE + text + ChatColor.YELLOW + "\nWait for future updates. :)");
     }
 }

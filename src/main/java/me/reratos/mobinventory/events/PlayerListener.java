@@ -1,5 +1,7 @@
 package me.reratos.mobinventory.events;
 
+import me.reratos.mobinventory.core.ArmorContent;
+import me.reratos.mobinventory.enums.ArmorPart;
 import me.reratos.mobinventory.util.StorageMob;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -11,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -41,7 +42,10 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
 
-        if(entity instanceof LivingEntity) {
+        if(entity instanceof Player) {
+            event.setCancelled(true);
+            return;
+        } else if(entity instanceof LivingEntity) {
 //            player.sendMessage("\n ====== PlayerInteractEntityEvent ======");
 //            player.sendMessage("Right Click in Entity (" + entity.getName() + ")");
             LivingEntity livingEntity = (LivingEntity) entity;
@@ -53,45 +57,23 @@ public class PlayerListener implements Listener {
                 ItemStack itemForDrop;
 
                 assert  entityEquipment != null;
-                switch (itemInHandMain.getType()) {
-                    case CHAINMAIL_HELMET:
-                    case DIAMOND_HELMET:
-                    case GOLDEN_HELMET:
-                    case IRON_HELMET:
-                    case LEATHER_HELMET:
-                    case NETHERITE_HELMET:
-                    case TURTLE_HELMET:
+                switch (ArmorPart.getArmorPart(itemInHandMain)) {
+                    case HELMET:
                         itemForDrop = entityEquipment.getHelmet();
                         entityEquipment.setHelmet(itemInHandMain);
                         break;
 
-                    case CHAINMAIL_CHESTPLATE:
-                    case DIAMOND_CHESTPLATE:
-                    case GOLDEN_CHESTPLATE:
-                    case IRON_CHESTPLATE:
-                    case LEATHER_CHESTPLATE:
-                    case NETHERITE_CHESTPLATE:
-                    case ELYTRA:
+                    case CHESTPLATE:
                         itemForDrop = entityEquipment.getChestplate();
                         entityEquipment.setChestplate(itemInHandMain);
                         break;
 
-                    case CHAINMAIL_LEGGINGS:
-                    case DIAMOND_LEGGINGS:
-                    case LEATHER_LEGGINGS:
-                    case GOLDEN_LEGGINGS:
-                    case IRON_LEGGINGS:
-                    case NETHERITE_LEGGINGS:
+                    case LEGGINGS:
                         itemForDrop = entityEquipment.getLeggings();
                         entityEquipment.setLeggings(itemInHandMain);
                         break;
 
-                    case CHAINMAIL_BOOTS:
-                    case DIAMOND_BOOTS:
-                    case GOLDEN_BOOTS:
-                    case IRON_BOOTS:
-                    case LEATHER_BOOTS:
-                    case NETHERITE_BOOTS:
+                    case BOOTS:
                         itemForDrop = entityEquipment.getBoots();
                         entityEquipment.setBoots(itemInHandMain);
                         break;
@@ -138,16 +120,30 @@ public class PlayerListener implements Listener {
 
             // inventario do mob teve interação
             if(storageMob.getStorage() == inv) {
+                int slot = event.getSlot();
+                ItemStack itemStackCursor = event.getCursor() == null ?
+                        new ItemStack(Material.AIR) : event.getCursor();
+
+                if(slot % 9 == 0) {
+                    boolean ret = false;
+                    if(slot / 9 < 4) {
+                        ret = !ArmorContent.setArmorContent(storageMob.getEntity().getEquipment(),
+                                slot/9, itemStackCursor);
+                    } else {
+                        ret = !ArmorContent.setHand(storageMob.getEntity().getEquipment(),
+                                slot/9 - 4, itemStackCursor);
+                    }
+                    event.setCancelled(ret);
+                    return;
+                }
 
                 if(!storageMob.hasStorage()) {
                     event.setCancelled(true);
                     return;
                 }
 
-                int slot = event.getSlot();
-
-                // temporariamente cancela evento quando clicado nas armadura ou arma do mob
-                if(slot % 9 < 2) {
+                // cancela evento quando clicado na coluna 2
+                if(slot % 9 == 1) {
                     event.setCancelled(true);
                 }
 
@@ -158,8 +154,7 @@ public class PlayerListener implements Listener {
                     sendNotImplemented(player, messageNotImplemented.get(clickType));
                     event.setCancelled(true);
                 } else if(event.isLeftClick()) {
-                    ItemStack itemStackCursor = event.getCursor() == null ?
-                            new ItemStack(Material.AIR) : event.getCursor();
+
 
 //                    player.sendMessage("slotNum: " + slot);
 
@@ -191,12 +186,30 @@ public class PlayerListener implements Listener {
             if(storageMob.getStorage() == inv) {
                 Map<Integer, ItemStack> mapItemStack = event.getNewItems();
 
-                if(mapItemStack.size() > 1) {
+                if(mapItemStack.size() == 1) {
+                    int slot = (int) mapItemStack.keySet().toArray()[0];
+                    ItemStack itemStackCursor = (ItemStack) mapItemStack.values().toArray()[0];
+
+                    //se a alteração for na area de equipamento
+                    if(slot % 9 == 0) {
+                        boolean ret = false;
+
+                        if(slot / 9 < 4) {
+                            ret = !ArmorContent.setArmorContent(storageMob.getEntity().getEquipment(),
+                                    slot/9, itemStackCursor);
+                        } else {
+                            ret = !ArmorContent.setHand(storageMob.getEntity().getEquipment(),
+                                    slot/9 - 4, itemStackCursor);
+                        }
+                        event.setCancelled(ret);
+                        return;
+                    } else { //senão, se for na area de inventario
+                        setItemStorageMob(slot, itemStackCursor);
+                    }
+
+                } else {
                     sendNotImplemented(player, "Drag items in the mob inventory.");
                     event.setCancelled(true);
-                } else {
-                    setItemStorageMob((Integer) mapItemStack.keySet().toArray()[0],
-                            (ItemStack) mapItemStack.values().toArray()[0]);
                 }
             }
         } catch (RuntimeException e) {

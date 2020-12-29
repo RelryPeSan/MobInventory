@@ -1,9 +1,9 @@
 name: MobInventory
-version: 0.4.0-alpha
+version: 0.4.1-alpha
 api-version: 1.13
 main: me.reratos.mobinventory.MobInventory
 author: Relry
 database: false
 website: todo
 description: >
-  Permite visualizar o inventário de um mob.
+  Allows you to view a mob's inventory.

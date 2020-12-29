@@ -42,9 +42,17 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
 
-        if(entity instanceof Player) {
+        EquipmentSlot hand = event.getHand();
+//        MainHand mainHand = event.getPlayer().getMainHand();
+
+        // Cancela o evento caso o evento não seja chamado com a mão principal
+        if(!hand.equals(EquipmentSlot.HAND)) {
             event.setCancelled(true);
             return;
+        }
+
+        if(entity instanceof Player) {
+            event.setCancelled(true);
         } else if(entity instanceof LivingEntity) {
 //            player.sendMessage("\n ====== PlayerInteractEntityEvent ======");
 //            player.sendMessage("Right Click in Entity (" + entity.getName() + ")");
